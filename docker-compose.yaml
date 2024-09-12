@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpass
+      POSTGRES_DB: postgres
+      PGDATA: /pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/pgdata
+
