@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS player_rankings (
   ranking_id SERIAL PRIMARY KEY,
   player_id INT REFERENCES players(player_id),
   ranking_date DATE NOT NULL,
-  rank INT NOT NULL,
-  points INT,
+  rank INT NULL,
+  points INT NULL,
   UNIQUE(player_id, ranking_date),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -40,15 +40,16 @@ CREATE TABLE IF NOT EXISTS matches (
   best_of INT,
   winner_id INT REFERENCES players(player_id) ON DELETE CASCADE,
   loser_id INT REFERENCES players(player_id) ON DELETE CASCADE,
-  winner_rank INT,
-  loser_rank INT,
-  winner_pts INT,
-  loser_pts INT,
-  winner_sets INT CHECK (winner_sets >= 0),
-  loser_sets INT CHECK (loser_sets >= 0),
+  winner_rank INT NULL,
+  loser_rank INT NULL,
+  winner_pts INT NULL,
+  loser_pts INT NULL,
+  winner_sets INT CHECK (winner_sets >= 0 OR winner_sets IS NULL),
+  loser_sets INT CHECK (loser_sets >= 0 OR loser_sets IS NULL),
   comments TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (tournament_id, date, round, winner_id, loser_id)
 );
 """
 
@@ -79,7 +80,8 @@ CREATE TABLE IF NOT EXISTS betting_odds (
   match_id INT REFERENCES matches(match_id) ON DELETE CASCADE,
   bookmaker VARCHAR(50),
   winner_odds DECIMAL(5, 2),
-  loser_odds DECIMAL(5, 2)
+  loser_odds DECIMAL(5, 2),
+  UNIQUE (match_id, bookmaker)
 );
 """
 
@@ -97,19 +99,22 @@ ON CONFLICT (name) DO NOTHING;
 """
 
 MATCH_INSERT = """
-INSERT INTO matches (tournament_id, date, round, best_of, winner_id, loser_id, winner_rank, loser_rank, winner_pts, loser_pts, winner_sets, loser_sets, comments)
+INSERT INTO matches (
+    tournament_id, date, round, best_of, winner_id, loser_id, 
+    winner_rank, loser_rank, winner_pts, loser_pts, winner_sets, loser_sets, comments
+)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-ON CONFLICT (tournament_id, date, round)  -- Use tournament, date, and round as a unique identifier for matches
+ON CONFLICT (tournament_id, date, round, winner_id, loser_id)  -- Conflict on unique match identifier
 DO UPDATE SET
-    winner_id = EXCLUDED.winner_id, 
-    loser_id = EXCLUDED.loser_id, 
     winner_rank = EXCLUDED.winner_rank,
     loser_rank = EXCLUDED.loser_rank,
     winner_pts = EXCLUDED.winner_pts,
     loser_pts = EXCLUDED.loser_pts,
     winner_sets = EXCLUDED.winner_sets,
     loser_sets = EXCLUDED.loser_sets,
-    comments = EXCLUDED.comments;
+    comments = EXCLUDED.comments,
+    updated_at = CURRENT_TIMESTAMP  -- Automatically update the 'updated_at' field on conflict
+RETURNING match_id;
 """
 
 PLAYER_RANKING_INSERT = """
@@ -123,11 +128,6 @@ DO UPDATE SET
 
 MATCH_SCORES_INSERT = """
 INSERT INTO match_scores (match_id, set_number, winner_score, loser_score)
-VALUES (%s, %s, %s, %s)
-"""
-
-BETTING_ODDS_INSERT = """
-INSERT INTO betting_odds (match_id, bookmaker, winner_odds, loser_odds)
 VALUES (%s, %s, %s, %s)
 """
 

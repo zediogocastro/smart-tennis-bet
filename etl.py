@@ -6,6 +6,7 @@ import pandas as pd
 import psycopg2
 from psycopg2.extensions import cursor
 from db_values import HOST, DBNAME, USER, PASSWORD
+from aux import convert_nan_to_none
 from sql_queries import (
     PLAYER_INSERT, TOURNAMENT_INSERT, MATCH_INSERT, 
     PLAYER_RANKING_INSERT, MATCH_SCORES_INSERT, BETTING_ODDS_INSERT)
@@ -48,8 +49,8 @@ def insert_betting_odds(match_id: int, row: pd.Series, cur: cursor) -> None:
 
 def insert_player_rankings(winner_id: int, loser_id: int, row: pd.Series, cur: cursor) -> None:
     """Insert player rankings for both winner and loser into the database."""
-    cur.execute(PLAYER_RANKING_INSERT, (winner_id, row['Date'], row['WRank'], row['WPts']))
-    cur.execute(PLAYER_RANKING_INSERT, (loser_id, row['Date'], row['LRank'], row['LPts']))
+    cur.execute(PLAYER_RANKING_INSERT, (winner_id, row['Date'], convert_nan_to_none(row['WRank']), convert_nan_to_none(row['WPts'])))
+    cur.execute(PLAYER_RANKING_INSERT, (loser_id, row['Date'], convert_nan_to_none(row['LRank']), convert_nan_to_none(row['LPts'])))
 
 
 def transform_and_insert_data(df: pd.DataFrame, cur: cursor) -> None:
@@ -73,10 +74,22 @@ def transform_and_insert_data(df: pd.DataFrame, cur: cursor) -> None:
 
         # Insert match data
         match_data = (
-            tournament_id, row['Date'], row['Round'], row['Best of'],
-            winner_id, loser_id, row['WRank'], row['LRank'], 
-            row['WPts'], row['LPts'], row['Wsets'], row['Lsets'], row['Comment']
+            tournament_id, 
+            row['Date'], 
+            row['Round'], 
+            row['Best of'],
+            winner_id, 
+            loser_id, 
+            convert_nan_to_none(row['WRank']), 
+            convert_nan_to_none(row['LRank']), 
+            convert_nan_to_none(row['WPts']), 
+            convert_nan_to_none(row['LPts']), 
+            convert_nan_to_none(row['Wsets']), 
+            convert_nan_to_none(row['Lsets']), 
+            row['Comment']
         )
+        print(match_data)
+            
         cur.execute(MATCH_INSERT, match_data)
         match_id = cur.fetchone()[0]  # Get the match_id of the inserted match
 
