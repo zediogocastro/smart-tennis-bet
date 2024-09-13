@@ -174,3 +174,58 @@ EXECUTE FUNCTION update_timestamp();
 execute_queries(cur, queries=[PLAYER_RANKINGS_TABLE_CREATE])
 execute_queries(cur, queries=[TRIGGER_FUNCTION_CREATE, TRIGGER_CREATE])
 """
+
+
+# Analytics Queries
+AVG_POINTS_BY_PLAYER_QUERY = """
+SELECT p.player_id, p.name, AVG(pr.points) AS avg_points
+FROM players p
+JOIN player_rankings pr ON p.player_id = pr.player_id
+GROUP BY p.player_id, p.name
+ORDER BY avg_points DESC;
+"""
+
+COUNT_GAMES_PER_TOURNAMENT_QUERY = """
+SELECT t.tournament_id, t.name, COUNT(m.match_id) AS total_games
+FROM tournaments t
+JOIN matches m ON t.tournament_id = m.tournament_id
+GROUP BY t.tournament_id, t.name
+ORDER BY total_games DESC
+LIMIT 10
+"""
+
+CURRENT_PRE_MATCH_ATP_RANKINGS_QUERY = """
+WITH latest_rankings AS (
+    SELECT
+        player_id,
+        rank,
+        points,
+        ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY ranking_date DESC) AS rn
+    FROM player_rankings
+)
+SELECT
+    p.player_id,
+    p.name,
+    lr.rank AS current_rank,
+    lr.points AS total_points
+FROM players p
+JOIN latest_rankings lr ON p.player_id = lr.player_id
+WHERE lr.rn = 1
+ORDER BY current_rank;
+"""
+
+
+
+WINS_PER_SURFACE_QUERY = """
+SELECT 
+  p.player_id, 
+  p.name, 
+  t.surface, 
+  COUNT(m.winner_id) AS total_wins
+FROM players p
+JOIN matches m ON p.player_id = m.winner_id
+JOIN tournaments t ON m.tournament_id = t.tournament_id
+GROUP BY p.player_id, p.name, t.surface
+ORDER BY total_wins DESC
+LIMIT 10;
+"""
