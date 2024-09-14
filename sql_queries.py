@@ -229,3 +229,20 @@ GROUP BY p.player_id, p.name, t.surface
 ORDER BY total_wins DESC
 LIMIT 10;
 """
+
+PLAYER_DETAILS_QUERY = """
+SELECT p.player_id, p.name, pr.rank, pr.points
+FROM players p
+JOIN player_rankings pr ON p.player_id = pr.player_id
+WHERE p.name ILIKE %s
+ORDER BY pr.ranking_date DESC
+LIMIT 1;
+"""
+
+PLAYER_RANKING_HISTORY_QUERY = """
+SELECT pr.ranking_date, pr.rank
+FROM players p
+JOIN player_rankings pr ON p.player_id = pr.player_id
+WHERE p.name = %s
+ORDER BY pr.ranking_date ASC;
+"""
