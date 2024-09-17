@@ -10,8 +10,9 @@ from sql_queries import (
 
 app = Flask(__name__)
 
-@app.route('/avg_points_by_player', methods=['GET'])
+@app.route('/avg_points_by_playerzzz', methods=['GET'])
 def get_avg_points_by_player():
+    print("Here!!!!!!!!!!!!!!!!!!")
     results = execute_query_with_params(AVG_POINTS_BY_PLAYER_QUERY)
     return jsonify(results)
 
@@ -63,4 +64,4 @@ def get_historical_player_rank():
     return jsonify(results), 200
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")

@@ -10,4 +10,17 @@ services:
       - "5432:5432"
     volumes:
       - ./postgres_data:/pgdata
-
+  
+  web:
+    build: ./flask_app
+    command: flask run --host=0.0.0.0
+    environment:
+      FLASK_APP: main.py
+      FLASK_ENV: development
+      DATABASE_URL: postgres://admin:adminpass@db:5432/postgres  # Flask will use this to connect to the DB
+    ports:
+      - "5000:5000" # Expose port 5000 for Flask
+    depends_on:
+      - db # Flask will wait for the DB to be ready before starting
+    #volumes:
+    #  - ./:/app  # Mount your Flask app source code for development

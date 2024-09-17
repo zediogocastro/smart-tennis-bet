@@ -77,8 +77,8 @@ def main():
 
     execute_queries(cur, queries=DROP_TABLE_QUERIES)
     print('All tables were successfully deleted!')
-    execute_queries(cur, queries=CREATE_TABLE_QUERIES)
-    print('All tables were successfully created!')
+    #execute_queries(cur, queries=CREATE_TABLE_QUERIES)
+    #print('All tables were successfully created!')
 
     conn.close()
 
