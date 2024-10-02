@@ -15,6 +15,21 @@ def extract_data_from_excel(url: str) -> pd.DataFrame:
     """Extract data from an Excel file at the given URL and return a pandas DataFrame"""
     return pd.read_excel(url)
 
+def validate_and_clean_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Validate that essential columns ('Winner' and 'Loser') are not missing.
+    Returns a cleaned DataFrame with only valid rows.
+    """
+    initial_row_count = len(df)
+    df_cleaned = df.dropna(subset=['Winner', 'Loser'])
+    final_row_count = len(df_cleaned)
+    
+    rows_removed = initial_row_count - final_row_count
+    if rows_removed > 0:
+        print(f"Removed {rows_removed} rows due to missing 'Winner' or 'Loser'.")
+    
+    return df_cleaned
+
 def insert_players(df: pd.DataFrame, cur: cursor) -> None:
     """Insert players from the DataFrame into the database."""
     players = pd.concat([df['Winner'], df['Loser']]).unique()
@@ -103,7 +118,10 @@ def load_data_to_db(url: str) -> None:
     df = extract_data_from_excel(url)
     with psycopg2.connect(host=HOST, dbname=DBNAME, user=USER, password=PASSWORD) as conn:
         with conn.cursor() as cur:
-            transform_and_insert_data(df, cur)
+            # Pre-process and clean the DataFrame
+            df_cleaned = validate_and_clean_data(df)
+            # Process the DataFrame
+            transform_and_insert_data(df_cleaned, cur)
     print("Data inserted!")
 
 def main():
