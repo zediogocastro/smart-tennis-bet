@@ -103,7 +103,7 @@ def transform_and_insert_data(df: pd.DataFrame, cur: cursor) -> None:
             convert_nan_to_none(row['Lsets']), 
             row['Comment']
         )
-        print(match_data)
+        #print(match_data)
             
         cur.execute(MATCH_INSERT, match_data)
         match_id = cur.fetchone()[0]  # Get the match_id of the inserted match

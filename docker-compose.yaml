@@ -24,3 +24,16 @@ services:
       - db # Flask will wait for the DB to be ready before starting
     volumes:
       - ./:/app  # Mount your Flask app source code for development
+
+  dash:
+    build: ./flask_app  # Same build context since both Flask and Dash use the same code
+    command: python app.py  # Change this to run your Dash app (app.py)
+    environment:
+      DATABASE_URL: postgres://admin:adminpass@db:5432/postgres
+    ports:
+      - "8050:8050"  # Expose the Dash app on port 8050
+    depends_on:
+      - web
+      - db
+    volumes:
+      - ./:/app  # Mount your Dash app source code for development
