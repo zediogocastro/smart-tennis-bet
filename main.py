@@ -5,10 +5,25 @@ from aux import execute_query_with_params
 from sql_queries import (
     AVG_POINTS_BY_PLAYER_QUERY, COUNT_GAMES_PER_TOURNAMENT_QUERY, 
     WINS_PER_SURFACE_QUERY, CURRENT_PRE_MATCH_ATP_RANKINGS_QUERY,
-    PLAYER_DETAILS_QUERY, PLAYER_RANKING_HISTORY_QUERY
+    PLAYER_DETAILS_QUERY, PLAYER_RANKING_HISTORY_QUERY, ALL_MATCHES_QUERY
 )
 
 app = Flask(__name__)
+
+@app.route('/all_matches', methods=['GET'])
+def get_all_matches():
+    matches = execute_query_with_params(ALL_MATCHES_QUERY) 
+    # Get filtering parameters
+    surface = request.args.get('surface')
+    court = request.args.get('court')
+
+    # Filter matches in Python
+    if surface:
+        matches = [match for match in matches if match['surface'] == surface]
+    if court:
+        matches = [match for match in matches if match['court_type'] == court]
+
+    return jsonify(matches)
 
 @app.route('/avg_points_by_playerzzz', methods=['GET'])
 def get_avg_points_by_player():
@@ -39,19 +54,6 @@ def get_player_details():
     
     results = execute_query_with_params(PLAYER_DETAILS_QUERY, (player_name,))
     return jsonify(results), 200
-
-
-# Experiment with post, it requires body data
-@app.route('/player_details', methods=["POST"])
-def post_player_details():
-    data = request.get_json()
-    player_name = data.get('name')
-
-    if not player_name:
-        return jsonify({"error": "Player name is required"}), 400
-
-    results = execute_query_with_params(PLAYER_DETAILS_QUERY, (player_name,))
-    return jsonify(results)
 
 @app.route("/historical_player_rank", methods=['GET'])
 def get_historical_player_rank():

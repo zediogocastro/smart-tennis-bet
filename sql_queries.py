@@ -169,13 +169,6 @@ FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
 """
 
-# Comments regarding full implementation TODO
-"""Then o the create_tables.py one should had something like:
-execute_queries(cur, queries=[PLAYER_RANKINGS_TABLE_CREATE])
-execute_queries(cur, queries=[TRIGGER_FUNCTION_CREATE, TRIGGER_CREATE])
-"""
-
-
 # Analytics Queries
 AVG_POINTS_BY_PLAYER_QUERY = """
 SELECT p.player_id, p.name, AVG(pr.points) AS avg_points
@@ -245,4 +238,26 @@ FROM players p
 JOIN player_rankings pr ON p.player_id = pr.player_id
 WHERE p.name = %s
 ORDER BY pr.ranking_date ASC;
+"""
+
+ALL_MATCHES_QUERY = """
+SELECT 
+  TO_CHAR(m.date, 'DD-MM-YYYY') AS match_date,
+  tr.surface AS surface,
+  tr.court AS court_type,
+  tr.name AS tournament_name,
+  m.round AS match_round,
+  p_winner.name AS winner_player,
+  m.winner_sets AS winner_sets,
+  p_loser.name AS loser_player,
+  m.loser_sets AS loser_sets,
+  m.comments
+FROM matches m
+JOIN
+  tournaments tr ON m.tournament_id = tr.tournament_id
+JOIN
+  players p_winner ON m.winner_id = p_winner.player_id
+JOIN
+  players p_loser ON m.loser_id = p_loser.player_id
+ORDER BY m.date DESC
 """
