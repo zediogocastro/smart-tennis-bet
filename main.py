@@ -5,7 +5,8 @@ from aux import execute_query_with_params
 from sql_queries import (
     AVG_POINTS_BY_PLAYER_QUERY, COUNT_GAMES_PER_TOURNAMENT_QUERY, 
     WINS_PER_SURFACE_QUERY, CURRENT_PRE_MATCH_ATP_RANKINGS_QUERY,
-    PLAYER_DETAILS_QUERY, PLAYER_RANKING_HISTORY_QUERY, ALL_MATCHES_QUERY
+    PLAYER_DETAILS_QUERY, PLAYER_RANKING_HISTORY_QUERY, ALL_MATCHES_QUERY,
+    ODDS
 )
 
 app = Flask(__name__)
@@ -64,6 +65,26 @@ def get_historical_player_rank():
     
     results = execute_query_with_params(PLAYER_RANKING_HISTORY_QUERY, (player_name,))
     return jsonify(results), 200
+
+@app.route('/historical_odds_matches', methods=['GET'])
+def historical_matches():
+    player_name = request.args.get('name')
+    print(player_name)
+    results_q = execute_query_with_params(ODDS, (player_name,))
+    print(results_q)
+
+    # Format the data into a list of dictionaries
+    """results = []
+    for row in results_q:
+        results.append({
+            "match_id": row[0],
+            "match_date": row[1],
+            "opponent": row[3],
+            "odds": row[4],
+            "result": row[2]
+        })
+    """
+    return jsonify(results_q)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

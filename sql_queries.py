@@ -233,7 +233,9 @@ LIMIT 1;
 """
 
 PLAYER_RANKING_HISTORY_QUERY = """
-SELECT pr.ranking_date, pr.rank
+SELECT 
+  TO_CHAR(pr.ranking_date, 'DD-MM-YYYY') AS ranking_date,
+  pr.rank
 FROM players p
 JOIN player_rankings pr ON p.player_id = pr.player_id
 WHERE p.name = %s
@@ -260,4 +262,28 @@ JOIN
 JOIN
   players p_loser ON m.loser_id = p_loser.player_id
 ORDER BY m.date DESC
+"""
+
+ODDS = """
+SELECT 
+    m.match_id,
+    m.date AS match_date,
+    CASE 
+        WHEN m.winner_id = p.player_id THEN 'Won'
+        ELSE 'Lost'
+    END AS result,
+    CASE 
+        WHEN m.winner_id = p.player_id THEN (SELECT p2.name FROM players p2 WHERE p2.player_id = m.loser_id)
+        ELSE (SELECT p2.name FROM players p2 WHERE p2.player_id = m.winner_id)
+    END AS opponent,
+    bo.winner_odds AS winner_odds,
+    bo.loser_odds AS loser_odds
+FROM 
+    matches m
+JOIN 
+    players p ON p.player_id = m.winner_id OR p.player_id = m.loser_id
+LEFT JOIN 
+    betting_odds bo ON bo.match_id = m.match_id
+WHERE 
+    p.name = (%s);  
 """
