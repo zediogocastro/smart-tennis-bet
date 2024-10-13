@@ -26,7 +26,8 @@ app.layout = html.Div(
                 {"name": "Court type", "id": "court_type"},
                 {"name": "Comments", "id": "comments"},
             ],
-            page_size=10,
+            page_size=10,  # Limit the number of rows per page
+            page_current=0,  # Track current page
             style_header={
                 'backgroundColor': 'green',
                 'fontWeight': 'bold',
@@ -40,7 +41,6 @@ app.layout = html.Div(
             ],
             style_table={'overflowX': 'auto'},
             style_data={'textAlign': 'center'},
-            #row_selectable="single",  # Make rows selectable for highlighting
         ),
         html.Hr(),
         
@@ -66,22 +66,26 @@ def update_table_on_load(_):
     else:
         return []
 
-
 # Callback to handle clicks on player names and update the ranking evolution graph
 @app.callback(
     Output('rank-evolution-graph', 'figure'),
     Input('match-table', 'active_cell'),  # Detect clicks on table cells
-    State('match-table', 'data')  # Get the table data
+    State('match-table', 'data'),  # Get the table data
+    State('match-table', 'page_current'),  # Get the current page of the table
+    State('match-table', 'page_size')  # Get the number of rows per page
 )
-def update_rank_evolution(active_cell, table_data):
+def update_rank_evolution(active_cell, table_data, page_current, page_size):
     if active_cell:
+        # Calculate the correct row index across pages
+        row_in_current_page = active_cell['row']
+        global_row_index = page_current * page_size + row_in_current_page  # Adjust for pagination
+
         # Get the clicked player name (either from 'winner_player' or 'loser_player')
         col = active_cell['column_id']
-        row = active_cell['row']
 
         # Only proceed if the clicked column is either winner or loser player
         if col in ['winner_player', 'loser_player']:
-            selected_player = table_data[row][col]
+            selected_player = table_data[global_row_index][col]  # Use global row index
 
             # Fetch historical ranking data for the selected player
             response = requests.get(f"http://web:5000/historical_player_rank?name={selected_player}", timeout=10)
