@@ -1,0 +1,3 @@
+[x] Fix table not synced.
+[] Fix Players Rank to show the actual players Rank rather than the Rank before the games.
+[] Add player's plot with betting simulations for the simple bet the smallest odd.
