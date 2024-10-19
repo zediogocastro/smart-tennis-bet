@@ -1,0 +1,49 @@
+version: 1
+disable_existing_loggers: True
+
+formatters:
+  console:
+    format: "%(asctime)-16s [%(levelname)-8s] - %(module)s.%(funcName)s:%(lineno)d - %(message)s"
+  file:
+    format: "%(asctime)s,%(name)s,%(levelname)s,%(filename)s,%(module)s,%(funcName)s,%(lineno)d,%(message)s"
+  colored:
+    "()": 'colorlog.ColoredFormatter'
+    format: "%(log_color)s%(asctime)-16s [%(levelname)-8s]%(reset)s %(name)s.%(funcName)s:%(lineno)d - %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: colored
+    stream: ext://sys.stdout
+
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: file
+    filename: /opt/log/log.csv  
+
+loggers:
+  common:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+  features:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+  preprocessing:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+  prediction:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+  postprocessing:
+    level: DEBUG
+    handlers: [console, file]
+    propagate: false
+  uvicorn:
+    level: DEBUG
+    handlers: [console, file]
