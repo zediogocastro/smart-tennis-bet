@@ -287,3 +287,20 @@ LEFT JOIN
 WHERE 
     p.name = (%s);  
 """
+
+DATA_TO_SIMULATE = """
+SELECT
+    m.*,
+    p_winner.name AS "Winner",
+    p_loser.name AS "Loser",
+    bo.winner_odds AS "AvgW",
+    bo.loser_odds AS "AvgL"
+FROM
+    matches m
+JOIN
+    players p_winner ON m.winner_id = p_winner.player_id
+JOIN
+    players p_loser ON m.loser_id = p_loser.player_id
+LEFT JOIN
+    betting_odds bo ON m.match_id = bo.match_id AND bo.bookmaker = 'Avg'
+"""

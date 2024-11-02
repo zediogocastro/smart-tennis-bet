@@ -1,12 +1,15 @@
 """Main Module to call the Flask App"""
 
+import pandas as pd
+from src.simulator import simulate_by_player
 from flask import Flask, request, jsonify
 from aux import execute_query_with_params
 from sql_queries import (
     AVG_POINTS_BY_PLAYER_QUERY, COUNT_GAMES_PER_TOURNAMENT_QUERY, 
     WINS_PER_SURFACE_QUERY, CURRENT_PRE_MATCH_ATP_RANKINGS_QUERY,
     PLAYER_DETAILS_QUERY, PLAYER_RANKING_HISTORY_QUERY, ALL_MATCHES_QUERY,
-    ODDS
+    ODDS,
+    DATA_TO_SIMULATE
 )
 
 app = Flask(__name__)
@@ -31,6 +34,19 @@ def get_avg_points_by_player():
     print("Here!!!!!!!!!!!!!!!!!!")
     results = execute_query_with_params(AVG_POINTS_BY_PLAYER_QUERY)
     return jsonify(results)
+
+@app.route('/amount_after_simulation', methods=['GET'])
+def get_amount_after_simulation():
+    results = execute_query_with_params(DATA_TO_SIMULATE)
+    print(type(results))
+    df = pd.DataFrame(results)
+    print(df.columns)
+    INITIAL_VALUE = 100
+    BET_AMOUNT = 10
+    res = simulate_by_player(df, INITIAL_VALUE, BET_AMOUNT)
+    res.sort_values("Net Gain/Loss ($)",ascending=False, inplace=True)
+    
+    return jsonify(res.to_dict(orient="records"))
 
 @app.route('/tournament_matches', methods=["GET"])
 def get_tournament_matches():
@@ -87,4 +103,4 @@ def historical_matches():
     return jsonify(results_q)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True, host="0.0.0.0", port=5002)
