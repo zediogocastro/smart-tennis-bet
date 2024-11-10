@@ -2,10 +2,25 @@ from dash import Dash, html, dcc, dash_table, Output, Input, State
 import requests
 import plotly.graph_objs as go
 
-app = Dash()
+app = Dash(__name__, suppress_callback_exceptions=True)  # Allow callbacks for dynamically generated components
 
+# Set up layout with navigation buttons and placeholder for page content
 app.layout = html.Div(
-    style={'background-color': '#f0f0f0', 'padding': '50px', 'border': 'none'}, 
+    style={'background-color': '#f0f0f0', 'padding': '50px', 'border': 'none'},
+    children=[
+        # Navigation buttons
+        html.Div([
+            html.Button("Home", id="home-button", n_clicks=0),
+            html.Button("Player", id="player-button", n_clicks=0),
+        ], style={'textAlign': 'center', 'margin-bottom': '20px'}),
+
+        # Placeholder for page content
+        html.Div(id="page-content")
+    ]
+)
+
+# Home page layout (your existing app content)
+home_layout = html.Div(
     children=[
         html.H1("🎾 Smart Tennis Bet 🎾", style={'textAlign': 'center'}),
         html.Hr(),
@@ -26,34 +41,61 @@ app.layout = html.Div(
                 {"name": "Court type", "id": "court_type"},
                 {"name": "Comments", "id": "comments"},
             ],
-            page_size=10,  # Limit the number of rows per page
-            page_current=0,  # Track current page
-            style_header={
-                'backgroundColor': 'green',
-                'fontWeight': 'bold',
-                'textAlign': 'center'
-            },
+            page_size=10,
+            page_current=0,
+            style_header={'backgroundColor': 'green', 'fontWeight': 'bold', 'textAlign': 'center'},
             style_cell_conditional=[
-                {
-                    'if': {'column_id': c},
-                    'fontWeight': 'bold'
-                } for c in ['winner_player', 'winner_sets', 'loser_sets', 'loser_player']
+                {'if': {'column_id': c}, 'fontWeight': 'bold'} for c in ['winner_player', 'winner_sets', 'loser_sets', 'loser_player']
             ],
             style_table={'overflowX': 'auto'},
             style_data={'textAlign': 'center'},
         ),
         html.Hr(),
-        
+
         # Section for the Player Rank Evolution
         html.H2("📈 Player Rank Evolution", style={'textAlign': 'left'}),
-        dcc.Graph(id="rank-evolution-graph"),  # Line plot for ranking evolution
+        dcc.Graph(id="rank-evolution-graph"),
     ]
 )
 
-# Define a callback to populate the table when the app loads
+# Player card page layout for Jannik Sinner
+player_layout = html.Div(
+    children=[
+        html.H1("Player Profile: Jannik Sinner", style={'textAlign': 'center'}),
+        html.Div(
+            style={
+                'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'padding': '20px',
+                'border': '1px solid #ddd', 'border-radius': '10px', 'backgroundColor': '#fff', 'width': '300px',
+                'margin': '0 auto'
+            },
+            children=[
+                html.Img(src="https://www.atptour.com/-/media/alias/player-gladiator-headshot/s0ag",
+                         style={'width': '100%', 'border-radius': '10px'}),
+                html.H2("Jannik Sinner", style={'margin-top': '10px'}),
+                html.P("ATP Tour Tennis Player"),
+                html.P("Country: Italy"),
+                # Add any other player stats you want here
+            ]
+        ),
+    ]
+)
+
+# Callback to control page navigation
+@app.callback(
+    Output('page-content', 'children'),
+    [Input('home-button', 'n_clicks'), Input('player-button', 'n_clicks')]
+)
+def display_page(home_clicks, player_clicks):
+    # Check which button was clicked most recently
+    if player_clicks > home_clicks:
+        return player_layout  # Show player card page if "Player" button clicked more times
+    else:
+        return home_layout   # Show home page otherwise
+
+# Define existing callbacks for your home page
 @app.callback(
     Output('match-table', 'data'),
-    Input('match-table', 'id')  
+    Input('match-table', 'id')
 )
 def update_table_on_load(_):
     # Fetch data from the Flask API
@@ -66,63 +108,40 @@ def update_table_on_load(_):
     else:
         return []
 
-# Callback to handle clicks on player names and update the ranking evolution graph
 @app.callback(
     Output('rank-evolution-graph', 'figure'),
-    Input('match-table', 'active_cell'),  # Detect clicks on table cells
-    State('match-table', 'data'),  # Get the table data
-    State('match-table', 'page_current'),  # Get the current page of the table
-    State('match-table', 'page_size')  # Get the number of rows per page
+    Input('match-table', 'active_cell'),
+    State('match-table', 'data'),
+    State('match-table', 'page_current'),
+    State('match-table', 'page_size')
 )
 def update_rank_evolution(active_cell, table_data, page_current, page_size):
     if active_cell:
-        # Calculate the correct row index across pages
         row_in_current_page = active_cell['row']
-        global_row_index = page_current * page_size + row_in_current_page  # Adjust for pagination
-
-        # Get the clicked player name (either from 'winner_player' or 'loser_player')
+        global_row_index = page_current * page_size + row_in_current_page
         col = active_cell['column_id']
 
-        # Only proceed if the clicked column is either winner or loser player
         if col in ['winner_player', 'loser_player']:
-            selected_player = table_data[global_row_index][col]  # Use global row index
-
-            # Fetch historical ranking data for the selected player
+            selected_player = table_data[global_row_index][col]
             response = requests.get(f"http://web:5000/historical_player_rank?name={selected_player}", timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
-
-                # Extract ranking_date and rank for the line plot
                 ranking_dates = [entry['ranking_date'] for entry in data]
                 ranks = [entry['rank'] for entry in data]
 
-                # Create a line plot using Plotly
                 figure = go.Figure(
-                    data=[go.Scatter(
-                        x=ranking_dates, 
-                        y=ranks, 
-                        mode='lines+markers', 
-                        line=dict(color='black'),  # Line color set to black
-                        name=f'Ranking of {selected_player}'
-                    )],
+                    data=[go.Scatter(x=ranking_dates, y=ranks, mode='lines+markers', line=dict(color='black'))],
                     layout=go.Layout(
                         title=f'Ranking Evolution of {selected_player}',
-                        xaxis={'title': 'Ranking Date', 'tickangle': -45},  # Rotate x-axis labels for better readability
-                        yaxis={
-                            'title': 'Rank', 
-                            'autorange': 'reversed',  # To show lower ranks (better positions) at the top
-                            'tickmode': 'linear',  # Ensure only integers on the y-axis
-                            'dtick': 1  # Set tick step to 1 for integers only
-                        },
-                        plot_bgcolor='rgba(0, 255, 0, 0.1)',  # Light green background with low opacity
+                        xaxis={'title': 'Ranking Date', 'tickangle': -45},
+                        yaxis={'title': 'Rank', 'autorange': 'reversed', 'tickmode': 'linear', 'dtick': 1},
+                        plot_bgcolor='rgba(0, 255, 0, 0.1)',
                         template='plotly_white'
                     )
                 )
                 return figure
-    # If no player is clicked or selected, return an empty graph
     return go.Figure()
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
