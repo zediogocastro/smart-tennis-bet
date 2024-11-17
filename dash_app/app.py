@@ -1,67 +1,5 @@
-# from dash import Dash, html, dcc, dash_table, Output, Input, State
-# import requests
-# import plotly.graph_objs as go
-
-# app = Dash(__name__, suppress_callback_exceptions=True)  # Allow callbacks for dynamically generated components
-
-# # Set up layout with navigation buttons and placeholder for page content
-# app.layout = html.Div(
-#     style={'background-color': '#f0f0f0', 'padding': '50px', 'border': 'none'},
-#     children=[
-#         # Navigation buttons
-#         html.Div([
-#             html.Button("Home", id="home-button", n_clicks=0),
-#             html.Button("Player", id="player-button", n_clicks=0),
-#         ], style={'textAlign': 'center', 'margin-bottom': '20px'}),
-
-#         # Placeholder for page content
-#         html.Div(id="page-content")
-#     ]
-# )
-
-
-# # Player card page layout for Jannik Sinner
-# player_layout = html.Div(
-#     children=[
-#         html.H1("Player Profile: Jannik Sinner", style={'textAlign': 'center'}),
-#         html.Div(
-#             style={
-#                 'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'padding': '20px',
-#                 'border': '1px solid #ddd', 'border-radius': '10px', 'backgroundColor': '#fff', 'width': '300px',
-#                 'margin': '0 auto'
-#             },
-#             children=[
-#                 html.Img(src="https://www.atptour.com/-/media/alias/player-gladiator-headshot/s0ag",
-#                          style={'width': '100%', 'border-radius': '10px'}),
-#                 html.H2("Jannik Sinner", style={'margin-top': '10px'}),
-#                 html.P("ATP Tour Tennis Player"),
-#                 html.P("Country: Italy"),
-#                 # Add any other player stats you want here
-#             ]
-#         ),
-#     ]
-# )
-
-# # Callback to control page navigation
-# @app.callback(
-#     Output('page-content', 'children'),
-#     [Input('home-button', 'n_clicks'), Input('player-button', 'n_clicks')]
-# )
-# def display_page(home_clicks, player_clicks):
-#     # Check which button was clicked most recently
-#     if player_clicks > home_clicks:
-#         return player_layout  # Show player card page if "Player" button clicked more times
-#     else:
-#         return home_layout   # Show home page otherwise
-
-
-
-# if __name__ == "__main__":
-#     app.run(debug=True, host="0.0.0.0")
-
-
 import dash
-from dash import Dash, html, dcc
+from dash import Dash, html, dcc, Output, Input
 import dash_bootstrap_components as dbc
 
 def banner():
@@ -100,51 +38,91 @@ def my_banner():
         }, children=[
             html.H1(" 🎾 Smart Tennis Bet"),
             html.H6("Legal")
-        ])
+        ]
+    )
 
 def button_navigation():
     """Create navigation buttons for Matches and Players Rank in a single row."""
     return html.Div(
         style={
-            #"paddingTop": "80px",  # Space for the fixed header
             "display": "flex",
-            "justifyContent": "space-between",  # Spread buttons across the row
-            "alignItems": "center",  # Center vertically
+            "justifyContent": "center",  # Center the button group
+            "alignItems": "center",
             "width": "100%",
-            #"gap": "10px",  # Space between buttons
-            #"boxSizing": "border-box",  # Ensure padding doesn't affect width
+            "paddingTop": "10px",  # Optional padding for spacing
         },
         children=[
             dcc.Location(id="url", refresh=False),  # URL manager
-            dbc.Button(
-                " 📡 Matches",
-                id="matches-button",
-                href="/",
-                color="primary",
-                outline=False,
-                style={
-                    "flex": "1",  # Equal width for all buttons
-                #     "height": "60px",
-                #     "fontSize": "20px",
-                #     "fontWeight": "bold",
-                #     "textAlign": "center",
-                #     "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.2)"
-                },
+            dbc.ButtonGroup(
+                [
+                    dbc.Button(
+                        "📡 Matches",
+                        id="matches-button",
+                        href="/",
+                        color="secondary",
+                        outline=False,
+                        style={
+                            "fontSize": "20px",
+                            "fontWeight": "bold",
+                        },
+                    ),
+                    dbc.Button(
+                        "🚀 Players Rank",
+                        id="players-rank-button",
+                        href="/players-rank",
+                        color="secondary",
+                        outline=False,
+                        style={
+                            "fontSize": "20px",
+                            "fontWeight": "bold",
+                        },
+                    ),
+                ],
+                style={"width": "100%"}  # Make the group fill the entire row
             ),
-            dbc.Button(
-                "🚀 Players Rank",
-                id="players-rank-button",
-                href="/players-rank",
-                color="primary",
-                outline=False,
-                style={
-                    "flex": "1",  # Equal width for all buttons
-                #     "height": "60px",
-                #     "fontSize": "20px",
-                #     "fontWeight": "bold",
-                #     "textAlign": "center",
-                #     "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.2)"
-                },
+        ]
+    )
+
+def my_button_navigation():
+    """Create navigation buttons for the pages in a single row"""
+    return html.Div(
+        style={
+            "display": "flex",
+            "justifyContent": "center", 
+            "alignItems": "center",
+        },
+        children=[
+            dcc.Location(id="url", refresh=False),
+            dbc.ButtonGroup(
+                [
+                    dbc.Button(
+                        " 🚀  Players Rank",
+                        id="players-rank-button",
+                        href="/",
+                        color="success",
+                        #className="me-1",
+                        active=True,
+                        style={
+                            "fontSize": "20px",
+                            "fontWeight": "bold",
+                            "color":"black",
+                        },
+                    ),
+                    dbc.Button(
+                        " 📡 Matches",
+                        id="matches-button",
+                        href="/matches",
+                        color="success",
+                        active=False,
+                        style={
+                            "fontSize": "20px",
+                            "fontWeight": "bold",
+                            "color":"black",
+                        },
+                    ),
+                ],
+                style={"width": "100%",
+                       "height": "45px"}
             )
         ]
     )
@@ -153,11 +131,27 @@ app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP]
 
 app.layout = html.Div([
     my_banner(),
-    button_navigation(),
+    my_button_navigation(),
     dash.page_container  # Placeholder for dynamic page content
 ])
 
+# Callback to update button styles based on active page
+@app.callback(
+    [
+        Output("players-rank-button", "active"),
+        Output("matches-button", "active"),
+    ],
+    Input("url", "pathname"),
+)
+def update_button_styles(pathname):
+    # Determine which page is active
+    if pathname == "/":
+        return True, False  # Players Rank active
+    elif pathname == "/matches":
+        return False, True  # Matches active
+    else:
+        return "success", "success"  # Default styles for unknown paths
+    
+    
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")
-
-
