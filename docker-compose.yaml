@@ -36,4 +36,4 @@ services:
       - web
       - db
     volumes:
-      - ./:/app  # Mount your Dash app source code for development
+      - ./dash_app:/app  # Mount your Dash app source code for development

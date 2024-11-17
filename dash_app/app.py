@@ -41,48 +41,6 @@ def my_banner():
         ]
     )
 
-def button_navigation():
-    """Create navigation buttons for Matches and Players Rank in a single row."""
-    return html.Div(
-        style={
-            "display": "flex",
-            "justifyContent": "center",  # Center the button group
-            "alignItems": "center",
-            "width": "100%",
-            "paddingTop": "10px",  # Optional padding for spacing
-        },
-        children=[
-            dcc.Location(id="url", refresh=False),  # URL manager
-            dbc.ButtonGroup(
-                [
-                    dbc.Button(
-                        "📡 Matches",
-                        id="matches-button",
-                        href="/",
-                        color="secondary",
-                        outline=False,
-                        style={
-                            "fontSize": "20px",
-                            "fontWeight": "bold",
-                        },
-                    ),
-                    dbc.Button(
-                        "🚀 Players Rank",
-                        id="players-rank-button",
-                        href="/players-rank",
-                        color="secondary",
-                        outline=False,
-                        style={
-                            "fontSize": "20px",
-                            "fontWeight": "bold",
-                        },
-                    ),
-                ],
-                style={"width": "100%"}  # Make the group fill the entire row
-            ),
-        ]
-    )
-
 def my_button_navigation():
     """Create navigation buttons for the pages in a single row"""
     return html.Div(
@@ -120,9 +78,23 @@ def my_button_navigation():
                             "color":"black",
                         },
                     ),
+                    dbc.Button(
+                        " 📈 Profits (Soon)",
+                        id="profits-button",
+                        href="/matches",
+                        color="success",
+                        active=False,
+                        disabled=True,
+                        style={
+                            "fontSize": "20px",
+                            "fontWeight": "bold",
+                            "color":"black",
+                        },
+                    ),
                 ],
                 style={"width": "100%",
-                       "height": "45px"}
+                       #"height": "5px"
+                       }
             )
         ]
     )
@@ -140,17 +112,18 @@ app.layout = html.Div([
     [
         Output("players-rank-button", "active"),
         Output("matches-button", "active"),
+        Output("profits-button", "active"),
     ],
     Input("url", "pathname"),
 )
 def update_button_styles(pathname):
-    # Determine which page is active
+    """Makes the button darker when is active by setting active to true"""
     if pathname == "/":
-        return True, False  # Players Rank active
+        return True, False, False  
     elif pathname == "/matches":
-        return False, True  # Matches active
+        return False, True, False  
     else:
-        return "success", "success"  # Default styles for unknown paths
+        return False, False 
     
     
 if __name__ == '__main__':
