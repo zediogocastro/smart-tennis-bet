@@ -41,7 +41,7 @@ def simulate_bets(df, initial_value, bet_amount, strategy=bet_on_smaller_odd):
             continue
 
         # Bet Decision (The one I think will win)
-        print(match["Winner"], match["Loser"], match["AvgW"], match["AvgL"])
+        #print(match["Winner"], match["Loser"], match["AvgW"], match["AvgL"])
         #print(type(match["AvgW"]))
         bet_decision = strategy(match["Winner"], match["Loser"], match["AvgW"], match["AvgL"])
         #print(f"{bet_decision = }")
@@ -78,7 +78,7 @@ def simulate_by_player(df, initial_value, bet_amount, strategy=bet_on_smaller_od
 
     results_summary = []
     for player in players:
-        print(player)
+        #print(player)
         # Create Player DataFrame
         df_player = df[
             (df["Winner"] == player) | (df["Loser"] == player)

@@ -37,15 +37,19 @@ def get_avg_points_by_player():
 
 @app.route('/amount_after_simulation', methods=['GET'])
 def get_amount_after_simulation():
+    # Gather data
     results = execute_query_with_params(DATA_TO_SIMULATE)
-    print(type(results))
     df = pd.DataFrame(results)
-    print(df.columns)
+
+    # Simulate bet
     INITIAL_VALUE = 100
     BET_AMOUNT = 10
     res = simulate_by_player(df, INITIAL_VALUE, BET_AMOUNT)
-    res.sort_values("Net Gain/Loss ($)",ascending=False, inplace=True)
     
+    # Format output
+    res["amount_rank"] = res["Net Gain/Loss ($)"].rank(method="dense", ascending=False)
+    res.sort_values("amount_rank", ascending=True, inplace=True)
+    print(res.head(2))
     return jsonify(res.to_dict(orient="records"))
 
 @app.route('/tournament_matches', methods=["GET"])
