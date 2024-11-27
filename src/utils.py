@@ -4,9 +4,11 @@ Utilities related to the project.
 
 from typing import Union
 import requests
+import json
+import os
 from bs4 import BeautifulSoup
 import pandas as pd
-from config import URL_ATP
+from config import URL_ATP, NAMES_MAPPING_FILE_PATH
 
 
 
@@ -96,3 +98,23 @@ def extract_atp_players_data(top_players: int = 500):
     soup = request_data(URL)
     players_df = preprocessing_players_data(soup)
     return players_df
+    
+
+def append_player_info(df):
+    """adds mapping to database palyers name and insert them into database"""
+    #print(df.head())
+    # Load players names mapping
+    loaded_mapping_df = pd.read_csv(NAMES_MAPPING_FILE_PATH)
+    #print(loaded_mapping_df.head())
+
+    # Merge names mapping with atp data
+    merged_data = df.merge(
+        loaded_mapping_df,
+        left_on="name",
+        right_on="atp_name",
+        how="left",
+    ).drop(columns=["name"])
+    print(merged_data.head())
+
+    
+    
