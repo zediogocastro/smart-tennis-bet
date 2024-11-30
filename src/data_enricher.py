@@ -3,6 +3,8 @@ Enriches the data by handling additional extractions and data transformations.
 """
 
 import pandas as pd
+import psycopg2
+from db_values import HOST, DBNAME, USER, PASSWORD
 from src.utils import extract_atp_players_data, append_player_info
 
 
@@ -15,7 +17,9 @@ class DataEnricher:
     def enrich_data(self):
         """INSERT external data into the main database.
         """
-        append_player_info(self.atp_players_info)
+        with psycopg2.connect(host=HOST, dbname=DBNAME, user=USER, password=PASSWORD) as conn:
+            with conn.cursor() as cur:
+                append_player_info(self.atp_players_info, cur)
 
     def get_atp_players_data(self, online: bool = False) -> pd.DataFrame:
         """Loads data either offline using cached dataframe or webscrapping offical ATP Ranking

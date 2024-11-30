@@ -4,10 +4,9 @@ Utilities related to the project.
 
 from typing import Union
 import requests
-import json
-import os
 from bs4 import BeautifulSoup
 import pandas as pd
+from psycopg2.extensions import cursor
 from config import URL_ATP, NAMES_MAPPING_FILE_PATH
 
 
@@ -100,12 +99,23 @@ def extract_atp_players_data(top_players: int = 500):
     return players_df
     
 
-def append_player_info(df):
-    """adds mapping to database palyers name and insert them into database"""
-    #print(df.head())
+def append_player_info(df: pd.DataFrame, cur: cursor) -> None:
+    """
+    Enrich the 'players' table with additional information from the CSV (ATP Data).
+    
+    Parameters
+    ----------
+    df: pd.DataFrame
+        DataFrame containing the new player data with a column to match existing players.
+    cur: psycopg2.extensions.cursor
+        Database cursor.
+
+    Returns
+    -------
+    None
+    """
     # Load players names mapping
     loaded_mapping_df = pd.read_csv(NAMES_MAPPING_FILE_PATH)
-    #print(loaded_mapping_df.head())
 
     # Merge names mapping with atp data
     merged_data = df.merge(
@@ -113,8 +123,39 @@ def append_player_info(df):
         left_on="name",
         right_on="atp_name",
         how="left",
-    ).drop(columns=["name"])
+    ).drop(columns=["name"]).dropna(subset=['sql_database_name', 'atp_name'])
+
     print(merged_data.head())
 
-    
-    
+    # Merge with the database table players
+    cur.execute("""
+    ALTER TABLE players
+    ADD COLUMN rank INTEGER,
+    ADD COLUMN age INTEGER,
+    ADD COLUMN points INTEGER,
+    ADD COLUMN nationality VARCHAR(100),
+    ADD COLUMN atp_code VARCHAR(100),
+    ADD COLUMN atp_name VARCHAR(100);
+    """)
+
+    update_data = [
+    (
+        row['rank'],
+        row['age'],
+        row['points'],
+        row['nationality'],
+        row['atp_code'],
+        row['atp_name'],
+        row['sql_database_name']
+    )
+    for _, row in merged_data.iterrows()
+    ]
+
+    update_query = """
+    UPDATE players
+    SET rank = %s, age = %s, points = %s, nationality = %s, atp_code = %s, atp_name = %s
+    WHERE name = %s;
+    """
+    cur.executemany(update_query, update_data)
+
+    print("Players table enriched successfully.")
