@@ -1,8 +1,9 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+.env
 
 *.pyc
 *.db
 
-/postgres_data
+postgres_data/
 data/

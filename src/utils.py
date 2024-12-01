@@ -10,7 +10,6 @@ from psycopg2.extensions import cursor
 from config import URL_ATP, NAMES_MAPPING_FILE_PATH
 
 
-
 def build_atp_url(top_x: int) -> str:
     """
     Build a dynamic ATP rankings URL.
@@ -97,12 +96,12 @@ def extract_atp_players_data(top_players: int = 500):
     soup = request_data(URL)
     players_df = preprocessing_players_data(soup)
     return players_df
-    
+
 
 def append_player_info(df: pd.DataFrame, cur: cursor) -> None:
     """
     Enrich the 'players' table with additional information from the CSV (ATP Data).
-    
+
     Parameters
     ----------
     df: pd.DataFrame
@@ -118,17 +117,22 @@ def append_player_info(df: pd.DataFrame, cur: cursor) -> None:
     loaded_mapping_df = pd.read_csv(NAMES_MAPPING_FILE_PATH)
 
     # Merge names mapping with atp data
-    merged_data = df.merge(
-        loaded_mapping_df,
-        left_on="name",
-        right_on="atp_name",
-        how="left",
-    ).drop(columns=["name"]).dropna(subset=['sql_database_name', 'atp_name'])
+    merged_data = (
+        df.merge(
+            loaded_mapping_df,
+            left_on="name",
+            right_on="atp_name",
+            how="left",
+        )
+        .drop(columns=["name"])
+        .dropna(subset=["sql_database_name", "atp_name"])
+    )
 
     print(merged_data.head())
 
     # Merge with the database table players
-    cur.execute("""
+    cur.execute(
+        """
     ALTER TABLE players
     ADD COLUMN rank INTEGER,
     ADD COLUMN age INTEGER,
@@ -136,19 +140,20 @@ def append_player_info(df: pd.DataFrame, cur: cursor) -> None:
     ADD COLUMN nationality VARCHAR(100),
     ADD COLUMN atp_code VARCHAR(100),
     ADD COLUMN atp_name VARCHAR(100);
-    """)
+    """
+    )
 
     update_data = [
-    (
-        row['rank'],
-        row['age'],
-        row['points'],
-        row['nationality'],
-        row['atp_code'],
-        row['atp_name'],
-        row['sql_database_name']
-    )
-    for _, row in merged_data.iterrows()
+        (
+            row["rank"],
+            row["age"],
+            row["points"],
+            row["nationality"],
+            row["atp_code"],
+            row["atp_name"],
+            row["sql_database_name"],
+        )
+        for _, row in merged_data.iterrows()
     ]
 
     update_query = """

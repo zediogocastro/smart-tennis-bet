@@ -49,8 +49,23 @@ def get_amount_after_simulation():
     # Format output
     res["amount_rank"] = res["Net Gain/Loss ($)"].rank(method="dense", ascending=False)
     res.sort_values("amount_rank", ascending=True, inplace=True)
-    print(res.head(2))
-    return jsonify(res.to_dict(orient="records"))
+    #print(res.head(2))
+
+    # Get Players info
+    players_info = execute_query_with_params("SELECT * FROM players")
+    df_players_info = pd.DataFrame(players_info)
+    #print(df_players_info.columns)
+
+    # Merge players info with the results
+    merged_df = res.merge(
+        df_players_info,
+        how='left',
+        left_on='Player',
+        right_on='name',
+    )
+    #print(merged_df.head())
+
+    return jsonify(merged_df.to_dict(orient="records"))
 
 @app.route('/tournament_matches', methods=["GET"])
 def get_tournament_matches():
