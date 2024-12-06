@@ -8,6 +8,13 @@ run_containers() {
     docker-compose exec web python create_tables.py
     docker-compose exec web python etl.py
 
+    # Add enricher
+    echo "Running the data enricher..."
+    docker-compose exec web python src/data_enricher.py
+    echo "Data enrichment complete!"
+
+    # Show logs from all services in a separate background process
+    #docker-compose logs -f &
 }
 
 list_containers() {
