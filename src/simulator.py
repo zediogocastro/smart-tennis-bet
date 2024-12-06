@@ -107,8 +107,8 @@ def simulate_by_player(df, initial_value, bet_amount, strategy=bet_on_smaller_od
             "Number of Bet Won": num_wins,
             "Number of Bet Lost": num_losses,
             "Win Percentage (%)": fraction_win,
-            "Final Amount ($)": final_amount,
-            "Net Gain/Loss ($)": net_gain_loss,
+            "Final Amount (€)": final_amount,
+            "Net Gain/Loss (€)": net_gain_loss,
             "Net Gain/Loss Percentage (%)": net_gain_loss_percentage,
             "Number of Played Games": num_played_games
         })

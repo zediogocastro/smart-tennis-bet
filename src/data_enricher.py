@@ -11,9 +11,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from db_values import HOST, DBNAME, USER, PASSWORD
 from src.utils import extract_atp_players_data, append_player_info
 
-# Add the parent directory of the script to the Python path
-
-
 class DataEnricher:
     """class to enrich the database with several external sources"""
 

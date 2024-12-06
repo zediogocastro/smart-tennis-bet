@@ -1,121 +1,87 @@
 import dash
 import dash_bootstrap_components as dbc
-from dash import html
+from dash import html, dcc, Input, Output
+import requests  # To fetch data from the API
 
 dash.register_page(__name__, path='/')
 
-# Sample data for players
-players = [
-    {
-        "id": 1,
-        "name": "Player 1",
-        "country": "USA",
-        "flag": "🇺🇸",
-        "stats": "50 Wins / 10 Losses",
-        "rating": "⭐⭐⭐⭐⭐",
-    },
-    {
-        "id": 2,
-        "name": "Player 2",
-        "country": "Japan",
-        "flag": "🇯🇵",
-        "stats": "40 Wins / 20 Losses",
-        "rating": "⭐⭐⭐⭐",
-    },
-    {
-        "id": 3,
-        "name": "Player 3",
-        "country": "France",
-        "flag": "🇫🇷",
-        "stats": "60 Wins / 5 Losses",
-        "rating": "⭐⭐⭐⭐⭐",
-    },
-    {
-        "id": 4,
-        "name": "Player 4",
-        "country": "Germany",
-        "flag": "🇩🇪",
-        "stats": "30 Wins / 15 Losses",
-        "rating": "⭐⭐⭐",
-    },
-    {
-        "id": 5,
-        "name": "Player 5",
-        "country": "Germany",
-        "flag": "🇩🇪",
-        "stats": "30 Wins / 15 Losses",
-        "rating": "⭐⭐⭐",
-    },
-]
-
+# Layout
+layout = html.Div(
+    [
+        dcc.Store(id="players-data-store"),  # To store fetched players data
+        html.Div(id="players-container"),  # Container for dynamically created player cards
+    ],
+    style={"padding": "20px"},
+)
 
 
 def create_player_card(player):
     return dbc.Card(
         [
             dbc.CardImg(
-                src="https://upload.wikimedia.org/wikipedia/commons/7/77/Jannik_Sinner_%282024_US_Open%29_04.jpg",  # Replace with player's image URL
+                src= player.get("picture_url", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMk7FTSymH9RlilziJurJVXkjxCGaozolJcQ&s"),  # Replace with player's image URL
                 top=True,
-                style={"height": "330px", "objectFit": "cover", "opacity": 0.8, "borderRadius": "10px"},
+                style={"height": "330px", "objectFit": "contain", "opacity": 0.99, "borderRadius": "10px"},
             ),
             dbc.CardImgOverlay(    
                 dbc.CardBody(
                     [
                        # Position the player ID (top-left corner)
                     html.Div(
-                        f"{player['id']}",
+                        f"{player.get('amount_rank', 'N/A')}",
                         style={
                             "position": "absolute",
                             "top": "10px",
                             "left": "10px",
-                            "color": "white",
+                            "color": "black",
                             "fontSize": "20px",
                             "fontWeight": "bold",
                             "text-decoration": "underline",
                         }), 
 
                         # Position the player name (center)
-                        html.H4(f"{player['name']}", className="card-title",
+                        html.H4(f"{player.get('name', 'Unknown')}", className="card-title",
                             style={
                             "position": "absolute",
                             "top": "50%",
                             "left": "50%",
                             "transform": "translate(-50%, -50%)",  # Center align
-                            "color": "white",
+                            "color": "black",
                             "fontSize": "24px",
                             "fontWeight": "bold",
                             "textAlign": "center",
+                            "backgroundColor": "rgba(0, 68, 7, 0.7)",
                         }),
 
                         # Position the country and flag (top-right corner)
-                        html.H6(f"{player['flag']} {player['country']}",
+                        html.H6(f"{player.get('country', 'Unknown')} {player.get('flag', '')}",
                                 style={
                             "position": "absolute",
                             "top": "10px",
                             "right": "10px",
-                            "color": "white",
+                            "color": "black",
                             "fontSize": "16px",
                             "fontWeight": "bold",
                         }),
 
                         # Position the stats (bottom-left corner)
-                        html.P(player["stats"], 
+                        html.P(f"ATP RANK: {player.get('rank', 'Unknown')}", 
                                style={
                             "position": "absolute",
                             "bottom": "10px",
                             "left": "10px",
-                            "color": "white",
+                            "color": "black",
                             "fontSize": "14px",
                         }),
 
                         # Position the rating (bottom-right corner)
                         html.Div(
-                            f"Rating: {player['rating']}",
+                            f"Returns: {player.get('Net Gain/Loss Percentage (%)', 'N/A')}% 🤑",
                             style={
                             "position": "absolute",
                             "bottom": "10px",
                             "right": "10px",
-                            "color": "#FFD700",
+                            "color": "green",
                             "fontSize": "14px",
                             "fontWeight": "bold",
                         },
@@ -126,21 +92,35 @@ def create_player_card(player):
         ],
         style={
             "boxShadow": "0px 4px 6px rgba(0, 0, 0, 0.1)",
-            "borderRadius": "100px",
+            "borderRadius": "10px",
         },
     )
 
-
-
-layout = html.Div(
-    [
-        dbc.Row(
-            [
-                dbc.Col(create_player_card(player), xs=12, sm=6, md=4, lg=3)
-                for player in players
-            ],
-            className="g-4",  # Gutters between rows and columns
-        )
-    ],
-    style={"padding": "20px"},
+# Callback to fetch data and populate the layout
+@dash.callback(
+    Output("players-data-store", "data"),
+    Input("players-container", "id"),  # Trigger fetching on page load
 )
+def fetch_players_data(_):
+    try:
+        response = requests.get("http://web:5000/amount_after_simulation")  # Replace with your API endpoint
+        response.raise_for_status()  # Raise an error for HTTP issues
+        data = response.json()  # Assuming the API returns a JSON list of players
+        return data
+    except Exception as e:
+        print(f"Error fetching players data: {e}")
+        return []
+    
+
+@dash.callback(
+    Output("players-container", "children"),
+    Input("players-data-store", "data"),
+)
+def populate_players_container(players_data):
+    if not players_data:
+        return html.Div("No player data available.", style={"textAlign": "center", "marginTop": "50px"})
+    return dbc.Row(
+        [dbc.Col(create_player_card(player), xs=12, sm=6, md=4, lg=3) for player in players_data],
+        className="g-4",  # Gutters between rows and columns
+    )
+    

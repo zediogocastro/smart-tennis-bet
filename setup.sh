@@ -2,7 +2,7 @@
 
 run_containers() {
     echo "Starting the containers..."
-    docker-compose up
+    docker-compose up -d
     echo "Containers are up and running!"
     # Step 2: Run the database setup and ETL scripts
     docker-compose exec web python create_tables.py
@@ -12,6 +12,9 @@ run_containers() {
     echo "Running the data enricher..."
     docker-compose exec web python src/data_enricher.py
     echo "Data enrichment complete!"
+
+    # Show logs from all services in a separate background process
+    #docker-compose logs -f &
 }
 
 list_containers() {

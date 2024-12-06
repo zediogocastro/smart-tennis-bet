@@ -11,6 +11,7 @@ from sql_queries import (
     ODDS,
     DATA_TO_SIMULATE
 )
+from src.visual_addons import process_nationality_and_atp_code
 
 app = Flask(__name__)
 
@@ -47,7 +48,7 @@ def get_amount_after_simulation():
     res = simulate_by_player(df, INITIAL_VALUE, BET_AMOUNT)
     
     # Format output
-    res["amount_rank"] = res["Net Gain/Loss ($)"].rank(method="dense", ascending=False)
+    res["amount_rank"] = res["Net Gain/Loss (€)"].rank(method="dense", ascending=False)
     res.sort_values("amount_rank", ascending=True, inplace=True)
     #print(res.head(2))
 
@@ -63,9 +64,9 @@ def get_amount_after_simulation():
         left_on='Player',
         right_on='name',
     )
-    #print(merged_df.head())
+    df_w_visuals = process_nationality_and_atp_code(merged_df)
 
-    return jsonify(merged_df.to_dict(orient="records"))
+    return jsonify(df_w_visuals.to_dict(orient="records"))
 
 @app.route('/tournament_matches', methods=["GET"])
 def get_tournament_matches():
