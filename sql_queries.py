@@ -224,7 +224,7 @@ LIMIT 10;
 """
 
 PLAYER_DETAILS_QUERY = """
-SELECT p.player_id, p.name, pr.rank, pr.points
+SELECT *
 FROM players p
 JOIN player_rankings pr ON p.player_id = pr.player_id
 WHERE p.name ILIKE %s

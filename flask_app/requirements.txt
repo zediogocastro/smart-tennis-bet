@@ -3,3 +3,6 @@ psycopg2-binary
 pandas
 openpyxl
 dash
+dash_bootstrap_components
+requests
+beautifulsoup4

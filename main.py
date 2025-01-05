@@ -11,6 +11,7 @@ from sql_queries import (
     ODDS,
     DATA_TO_SIMULATE
 )
+from src.visual_addons import process_nationality_and_atp_code
 
 app = Flask(__name__)
 
@@ -37,16 +38,35 @@ def get_avg_points_by_player():
 
 @app.route('/amount_after_simulation', methods=['GET'])
 def get_amount_after_simulation():
+    # Gather data
     results = execute_query_with_params(DATA_TO_SIMULATE)
-    print(type(results))
     df = pd.DataFrame(results)
-    print(df.columns)
+
+    # Simulate bet
     INITIAL_VALUE = 100
     BET_AMOUNT = 10
     res = simulate_by_player(df, INITIAL_VALUE, BET_AMOUNT)
-    res.sort_values("Net Gain/Loss ($)",ascending=False, inplace=True)
     
-    return jsonify(res.to_dict(orient="records"))
+    # Format output
+    res["amount_rank"] = res["Net Gain/Loss (€)"].rank(method="dense", ascending=False)
+    res.sort_values("amount_rank", ascending=True, inplace=True)
+    #print(res.head(2))
+
+    # Get Players info
+    players_info = execute_query_with_params("SELECT * FROM players")
+    df_players_info = pd.DataFrame(players_info)
+    #print(df_players_info.columns)
+
+    # Merge players info with the results
+    merged_df = res.merge(
+        df_players_info,
+        how='left',
+        left_on='Player',
+        right_on='name',
+    )
+    df_w_visuals = process_nationality_and_atp_code(merged_df)
+
+    return jsonify(df_w_visuals.to_dict(orient="records"))
 
 @app.route('/tournament_matches', methods=["GET"])
 def get_tournament_matches():
