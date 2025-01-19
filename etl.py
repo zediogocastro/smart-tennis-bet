@@ -38,9 +38,9 @@ def insert_players(df: pd.DataFrame, cur: cursor) -> None:
 
 def insert_tournaments(df: pd.DataFrame, cur: cursor) -> None:
     """Insert unique tournaments from the DataFrame into the database."""
-    tournaments = df[["Tournament", "Location", "Surface", "Series", "Court"]].drop_duplicates()
+    tournaments = df[["ATP", "Tournament","Location", "Surface", "Series", "Court"]].drop_duplicates()
     for _, row in tournaments.iterrows():
-        cur.execute(TOURNAMENT_INSERT, (row["Tournament"], row["Location"], row["Surface"], row["Series"], row["Court"]))
+        cur.execute(TOURNAMENT_INSERT, (row["ATP"], row["Tournament"], row["Location"], row["Surface"], row["Series"], row["Court"]))
 
 def insert_match_scores(match_id: int, row: pd.Series, cur: cursor) -> None:
     """Insert match scores for each set into the database."""

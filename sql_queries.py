@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS matches (
 TOURNAMENTS_TABLE_CREATE= """
 CREATE TABLE IF NOT EXISTS tournaments (
   tournament_id SERIAL PRIMARY KEY,
+  tournament_ATP INT,
   name VARCHAR(100) NOT NULL UNIQUE,
   location VARCHAR(100),
   surface VARCHAR(50),
@@ -93,8 +94,8 @@ ON CONFLICT (name) DO NOTHING;
 """
 
 TOURNAMENT_INSERT = """
-INSERT INTO tournaments (name, location, surface, series, court)
-VALUES (%s, %s, %s, %s, %s)
+INSERT INTO tournaments (tournament_ATP, name, location, surface, series, court)
+VALUES (%s, %s, %s, %s, %s, %s)
 ON CONFLICT (name) DO NOTHING;
 """
 

@@ -6,3 +6,4 @@ dash
 dash_bootstrap_components
 requests
 beautifulsoup4
+python-dotenv

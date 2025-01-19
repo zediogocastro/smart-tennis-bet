@@ -13,6 +13,14 @@ run_containers() {
     docker-compose exec web python src/data_enricher.py
     echo "Data enrichment complete!"
 
+    # Add data export based on config flag
+    echo "Checking if data export is requested..."
+    docker-compose exec web python -c "from config import CREATE_MAIN_DF; exit(0 if CREATE_MAIN_DF else 1)" && {
+        echo "Exporting data..."
+        docker-compose exec web python src/export_data.py
+        echo "Data export complete!"
+    }
+
     # Show logs from all services in a separate background process
     #docker-compose logs -f &
 }
